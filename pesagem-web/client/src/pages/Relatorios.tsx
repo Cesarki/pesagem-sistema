@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMockApi } from '@/hooks/useMockApi';
-import { ChevronDown, Download, Search, FileText } from 'lucide-react';
+import { ChevronDown, Download, Search, FileText, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -23,11 +23,15 @@ interface PesagemCompleta {
   status: string;
 }
 
+const OPCOES_STATUS = ['Pesando', 'Descarregando', 'Pesagem finalizada'];
+
 export default function Relatorios() {
   const { getPesagensCompletas } = useMockApi();
   const [pesagens, setPesagens] = useState<PesagemCompleta[]>([]);
   const [filtradas, setFiltradas] = useState<PesagemCompleta[]>([]);
   const [busca, setBusca] = useState('');
+  const [codigoTicket, setCodigoTicket] = useState('');
+  const [statusSelecionado, setStatusSelecionado] = useState<string>('');
   const [expandido, setExpandido] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,24 +52,55 @@ export default function Relatorios() {
     carregarPesagens();
   }, [getPesagensCompletas]);
 
+  // Aplicar filtros
   useEffect(() => {
     const termo = busca.toLowerCase();
-    const resultado = pesagens.filter(
-      (p) =>
-        p.motorista.nome.toLowerCase().includes(termo) ||
-        p.placa_caminhao.toLowerCase().includes(termo) ||
-        p.motorista.documento.includes(termo) ||
-        p.data_pesagem.includes(termo)
-    );
+    const codigo = codigoTicket.trim();
+    
+    const resultado = pesagens.filter((p) => {
+      // Filtro por código do ticket
+      if (codigo && !p.id.toString().includes(codigo)) {
+        return false;
+      }
+
+      // Filtro por status
+      if (statusSelecionado && p.status !== statusSelecionado) {
+        return false;
+      }
+
+      // Filtro por busca geral (motorista, placa, documento, data)
+      if (termo) {
+        return (
+          p.motorista.nome.toLowerCase().includes(termo) ||
+          p.placa_caminhao.toLowerCase().includes(termo) ||
+          p.motorista.documento.includes(termo) ||
+          p.data_pesagem.includes(termo)
+        );
+      }
+
+      return true;
+    });
+
     setFiltradas(resultado);
-  }, [busca, pesagens]);
+  }, [busca, codigoTicket, statusSelecionado, pesagens]);
 
   const calcularDiferenca = (inicial: number, final: number) => {
     return final - inicial;
   };
 
-  const exportarPDF = () => {
+  const limparFiltros = () => {
+    setBusca('');
+    setCodigoTicket('');
+    setStatusSelecionado('');
+  };
+
+  const exportarRelatorio = () => {
     try {
+      if (filtradas.length === 0) {
+        toast.error('Nenhuma pesagem para exportar');
+        return;
+      }
+
       // Criar conteúdo HTML para o PDF
       const htmlContent = `
         <!DOCTYPE html>
@@ -83,6 +118,13 @@ export default function Relatorios() {
                 text-align: center;
                 color: #1f2937;
                 margin-bottom: 30px;
+              }
+              .relatorio-info {
+                background-color: #f3f4f6;
+                padding: 15px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                font-size: 13px;
               }
               .pesagem-item {
                 page-break-inside: avoid;
@@ -119,7 +161,7 @@ export default function Relatorios() {
                 background-color: #dbeafe;
                 color: #1e40af;
               }
-              .status-finalizada {
+              .status-pesagem-finalizada {
                 background-color: #dcfce7;
                 color: #166534;
               }
@@ -190,15 +232,19 @@ export default function Relatorios() {
           </head>
           <body>
             <h1>Relatório de Pesagens de Caminhões</h1>
-            <div style="text-align: center; margin-bottom: 30px; color: #6b7280; font-size: 13px;">
-              Gerado em: ${new Date().toLocaleString('pt-BR')}
+            <div class="relatorio-info">
+              <p><strong>Data de Geração:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+              <p><strong>Total de Pesagens:</strong> ${filtradas.length}</p>
+              ${codigoTicket ? `<p><strong>Filtro - Ticket:</strong> #${codigoTicket}</p>` : ''}
+              ${statusSelecionado ? `<p><strong>Filtro - Status:</strong> ${statusSelecionado}</p>` : ''}
+              ${busca ? `<p><strong>Filtro - Busca:</strong> ${busca}</p>` : ''}
             </div>
       `;
 
-      // Adicionar cada pesagem ao PDF
+      // Adicionar cada pesagem ao relatório
       let htmlItems = '';
       filtradas.forEach((pesagem) => {
-        const statusClass = `status-${pesagem.status.toLowerCase().replace(' ', '-')}`;
+        const statusClass = `status-${pesagem.status.toLowerCase().replace(/\s+/g, '-')}`;
         const diferenca = pesagem.pesagem_final - pesagem.pesagem_inicial;
         
         htmlItems += `
@@ -274,7 +320,7 @@ export default function Relatorios() {
       const finalHtml = htmlContent + htmlItems + `
             <div class="footer">
               <p>Sistema de Pesagem de Caminhões</p>
-              <p>Total de pesagens: ${filtradas.length}</p>
+              <p>Relatório gerado automaticamente</p>
             </div>
           </body>
         </html>
@@ -293,7 +339,7 @@ export default function Relatorios() {
 
       toast.success('Relatório exportado com sucesso!');
     } catch (error) {
-      console.error('Erro ao exportar PDF:', error);
+      console.error('Erro ao exportar relatório:', error);
       toast.error('Erro ao exportar relatório');
     }
   };
@@ -330,31 +376,77 @@ export default function Relatorios() {
           </p>
         </div>
 
-        {/* Busca e Filtros */}
+        {/* Filtros */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">Filtros</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Busca Geral */}
             <div>
-              <Label htmlFor="busca">Buscar por motorista, placa ou data</Label>
+              <Label htmlFor="busca">Buscar por motorista, placa, documento ou data</Label>
               <div className="relative mt-2">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="busca"
-                  placeholder="Ex: João Silva, ABC-1234, 04/06/2026"
+                  placeholder="Ex: João Silva, ABC-1234, 123.456.789-00, 04/06/2026"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setBusca('')}>
+
+            {/* Filtros em Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Código do Ticket */}
+              <div>
+                <Label htmlFor="codigo">Código do Ticket</Label>
+                <Input
+                  id="codigo"
+                  placeholder="Ex: 1, 2, 3..."
+                  value={codigoTicket}
+                  onChange={(e) => setCodigoTicket(e.target.value)}
+                  type="number"
+                  className="mt-2"
+                />
+              </div>
+
+              {/* Status */}
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  value={statusSelecionado}
+                  onChange={(e) => setStatusSelecionado(e.target.value)}
+                  className="w-full mt-2 px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                >
+                  <option value="">Todos os Status</option>
+                  {OPCOES_STATUS.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Botões de Ação */}
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                onClick={limparFiltros}
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
                 Limpar Filtros
               </Button>
-              <Button onClick={exportarPDF} className="ml-auto">
-                <FileText className="mr-2 h-4 w-4" />
+              <Button
+                onClick={exportarRelatorio}
+                className="ml-auto gap-2"
+                disabled={filtradas.length === 0}
+              >
+                <FileText className="h-4 w-4" />
                 Exportar Relatório
               </Button>
             </div>
