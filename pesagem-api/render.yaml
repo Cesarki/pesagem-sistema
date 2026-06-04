@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: pesagem-api
+    env: php
+    plan: free
+    buildCommand: composer install
+    startCommand: vendor/bin/heroku-php-apache2 public/
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: pesagem-db
+          property: host
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        fromDatabase:
+          name: pesagem-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: pesagem-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pesagem-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: pserv
+    name: pesagem-db
+    env: postgres
+    plan: free
+    ipAllowList: []
+    databaseName: pesagem_db
+    user: postgres
+    initialSqlGitRepo:
+      repo: <seu-repositorio-github>
+      branch: main
+      sqlDir: database

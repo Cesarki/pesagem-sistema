@@ -1,0 +1,28 @@
+# Dependências
+vendor/
+composer.lock
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Cache
+cache/
+tmp/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
