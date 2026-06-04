@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMockApi } from '@/hooks/useMockApi';
-import { AlertCircle, CheckCircle, Loader2, Truck } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Truck, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -284,12 +284,31 @@ export default function Sistema2() {
                 </div>
 
                 {formData.pesagem_final && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                      <span className="font-semibold">Diferença de peso:</span>{' '}
-                      {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
-                    </p>
-                  </div>
+                  <>
+                    {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final) > 0 ? (
+                      <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex gap-3">
+                        <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-red-800 mb-1">
+                            Atenção!
+                          </p>
+                          <p className="text-sm text-red-700">
+                            Este caminhão está saindo com o peso maior do que quando chegou. Verifique!
+                          </p>
+                          <p className="text-sm text-red-600 mt-2">
+                            <span className="font-semibold">Diferença de peso:</span> +{calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-sm text-blue-800">
+                          <span className="font-semibold">Diferença de peso:</span>{' '}
+                          {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="space-y-2">
