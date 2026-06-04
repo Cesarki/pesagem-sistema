@@ -13,6 +13,7 @@ interface Motorista {
   nome: string;
   documento: string;
   telefone: string;
+  placa_caminhao: string;
 }
 
 interface Pesagem {
@@ -35,11 +36,12 @@ export default function Sistema1() {
 
   const [formData, setFormData] = useState({
     motorista_id: '',
-    placa_caminhao: '',
     data_pesagem: new Date().toISOString().split('T')[0],
     hora_entrada: new Date().toTimeString().slice(0, 5),
     pesagem_inicial: '',
   });
+
+  const [placaSelecionada, setPlacaSelecionada] = useState('');
 
   // Carregar motoristas
   useEffect(() => {
@@ -73,10 +75,18 @@ export default function Sistema1() {
     loadPesagens();
   }, [request]);
 
+  const handleMotoristaChange = (motoristaId: string) => {
+    setFormData({ ...formData, motorista_id: motoristaId });
+    const motorista = motoristas.find((m) => m.id === parseInt(motoristaId));
+    if (motorista) {
+      setPlacaSelecionada(motorista.placa_caminhao);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.motorista_id || !formData.placa_caminhao || !formData.pesagem_inicial) {
+    if (!formData.motorista_id || !formData.pesagem_inicial) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
@@ -84,7 +94,7 @@ export default function Sistema1() {
     try {
       const novaPesagem = await post<Pesagem>('/pesagens', {
         motorista_id: parseInt(formData.motorista_id),
-        placa_caminhao: formData.placa_caminhao.toUpperCase(),
+        placa_caminhao: placaSelecionada,
         data_pesagem: formData.data_pesagem,
         hora_entrada: formData.hora_entrada,
         pesagem_inicial: parseFloat(formData.pesagem_inicial),
@@ -93,11 +103,11 @@ export default function Sistema1() {
       setPesagens([novaPesagem, ...pesagens]);
       setFormData({
         motorista_id: '',
-        placa_caminhao: '',
         data_pesagem: new Date().toISOString().split('T')[0],
         hora_entrada: new Date().toTimeString().slice(0, 5),
         pesagem_inicial: '',
       });
+      setPlacaSelecionada('');
 
       toast.success('Pesagem criada com sucesso!');
     } catch (err) {
@@ -134,9 +144,7 @@ export default function Sistema1() {
                   <Label htmlFor="motorista">Motorista *</Label>
                   <Select
                     value={formData.motorista_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, motorista_id: value })
-                    }
+                    onValueChange={handleMotoristaChange}
                     disabled={loadingMotoristas || isLoading}
                   >
                     <SelectTrigger id="motorista">
@@ -145,26 +153,29 @@ export default function Sistema1() {
                     <SelectContent>
                       {motoristas.map((m) => (
                         <SelectItem key={m.id} value={m.id.toString()}>
-                          {m.nome}
+                          {m.nome} ({m.placa_caminhao})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="placa">Placa do Caminhão *</Label>
-                  <Input
-                    id="placa"
-                    placeholder="ABC-1234"
-                    value={formData.placa_caminhao}
-                    onChange={(e) =>
-                      setFormData({ ...formData, placa_caminhao: e.target.value })
-                    }
-                    disabled={isLoading}
-                    maxLength={10}
-                  />
-                </div>
+                {placaSelecionada && (
+                  <div className="space-y-2">
+                    <Label htmlFor="placa">Placa do Caminhão *</Label>
+                    <Input
+                      id="placa"
+                      placeholder="ABC-1234"
+                      value={placaSelecionada}
+                      onChange={(e) => setPlacaSelecionada(e.target.value)}
+                      disabled={isLoading}
+                      maxLength={10}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Placa sugerida do motorista. Pode ser alterada se estiver dirigindo outro caminhão.
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="data">Data da Pesagem *</Label>
