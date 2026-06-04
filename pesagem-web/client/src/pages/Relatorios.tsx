@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMockApi } from '@/hooks/useMockApi';
-import { ChevronDown, Download, Search } from 'lucide-react';
+import { ChevronDown, Download, Search, FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -65,7 +65,237 @@ export default function Relatorios() {
   };
 
   const exportarPDF = () => {
-    toast.success('Relatório exportado em PDF!');
+    try {
+      // Criar conteúdo HTML para o PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Relatório de Pesagens</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                color: #333;
+              }
+              h1 {
+                text-align: center;
+                color: #1f2937;
+                margin-bottom: 30px;
+              }
+              .pesagem-item {
+                page-break-inside: avoid;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 20px;
+                background-color: #f9fafb;
+              }
+              .ticket-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                border-bottom: 2px solid #e5e7eb;
+                padding-bottom: 10px;
+              }
+              .ticket-id {
+                font-size: 18px;
+                font-weight: bold;
+                color: #1f2937;
+              }
+              .status-badge {
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: bold;
+              }
+              .status-pesando {
+                background-color: #fef3c7;
+                color: #92400e;
+              }
+              .status-descarregando {
+                background-color: #dbeafe;
+                color: #1e40af;
+              }
+              .status-finalizada {
+                background-color: #dcfce7;
+                color: #166534;
+              }
+              .section {
+                margin-bottom: 15px;
+              }
+              .section-title {
+                font-weight: bold;
+                color: #1f2937;
+                margin-bottom: 8px;
+                font-size: 14px;
+              }
+              .info-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                font-size: 13px;
+              }
+              .info-item {
+                display: flex;
+                flex-direction: column;
+              }
+              .info-label {
+                color: #6b7280;
+                font-size: 11px;
+                margin-bottom: 3px;
+              }
+              .info-value {
+                color: #1f2937;
+                font-weight: 500;
+              }
+              .pesagens-box {
+                background-color: #f3f4f6;
+                padding: 12px;
+                border-radius: 6px;
+                margin-top: 10px;
+              }
+              .pesagens-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 15px;
+                font-size: 13px;
+              }
+              .peso-item {
+                text-align: center;
+              }
+              .peso-label {
+                color: #6b7280;
+                font-size: 11px;
+                margin-bottom: 5px;
+              }
+              .peso-valor {
+                font-size: 18px;
+                font-weight: bold;
+              }
+              .peso-inicial { color: #2563eb; }
+              .peso-final { color: #ea580c; }
+              .peso-liquido { color: #16a34a; }
+              .footer {
+                margin-top: 40px;
+                text-align: center;
+                color: #9ca3af;
+                font-size: 12px;
+                border-top: 1px solid #e5e7eb;
+                padding-top: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Relatório de Pesagens de Caminhões</h1>
+            <div style="text-align: center; margin-bottom: 30px; color: #6b7280; font-size: 13px;">
+              Gerado em: ${new Date().toLocaleString('pt-BR')}
+            </div>
+      `;
+
+      // Adicionar cada pesagem ao PDF
+      let htmlItems = '';
+      filtradas.forEach((pesagem) => {
+        const statusClass = `status-${pesagem.status.toLowerCase().replace(' ', '-')}`;
+        const diferenca = pesagem.pesagem_final - pesagem.pesagem_inicial;
+        
+        htmlItems += `
+          <div class="pesagem-item">
+            <div class="ticket-header">
+              <div class="ticket-id">Ticket #${pesagem.id}</div>
+              <div class="status-badge ${statusClass}">${pesagem.status}</div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Informações do Motorista</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Nome</div>
+                  <div class="info-value">${pesagem.motorista.nome}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Documento</div>
+                  <div class="info-value">${pesagem.motorista.documento}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Telefone</div>
+                  <div class="info-value">${pesagem.motorista.telefone}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Placa do Caminhão</div>
+                  <div class="info-value">${pesagem.placa_caminhao}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Datas e Horários</div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Data</div>
+                  <div class="info-value">${pesagem.data_pesagem}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Hora Entrada</div>
+                  <div class="info-value">${pesagem.hora_entrada}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Hora Saída</div>
+                  <div class="info-value">${pesagem.hora_saida || 'Pendente'}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Pesagens</div>
+              <div class="pesagens-box">
+                <div class="pesagens-grid">
+                  <div class="peso-item">
+                    <div class="peso-label">Peso Inicial</div>
+                    <div class="peso-valor peso-inicial">${pesagem.pesagem_inicial.toFixed(2)} kg</div>
+                  </div>
+                  <div class="peso-item">
+                    <div class="peso-label">Peso Final</div>
+                    <div class="peso-valor peso-final">${pesagem.pesagem_final.toFixed(2)} kg</div>
+                  </div>
+                  <div class="peso-item">
+                    <div class="peso-label">Diferença (Líquido)</div>
+                    <div class="peso-valor peso-liquido">${diferenca.toFixed(2)} kg</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      const finalHtml = htmlContent + htmlItems + `
+            <div class="footer">
+              <p>Sistema de Pesagem de Caminhões</p>
+              <p>Total de pesagens: ${filtradas.length}</p>
+            </div>
+          </body>
+        </html>
+      `;
+
+      // Criar blob e fazer download
+      const blob = new Blob([finalHtml], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `relatorio-pesagens-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Relatório exportado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao exportar relatório');
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -124,8 +354,8 @@ export default function Relatorios() {
                 Limpar Filtros
               </Button>
               <Button onClick={exportarPDF} className="ml-auto">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar PDF
+                <FileText className="mr-2 h-4 w-4" />
+                Exportar Relatório
               </Button>
             </div>
           </CardContent>
