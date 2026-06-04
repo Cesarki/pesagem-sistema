@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMockApi } from '@/hooks/useMockApi';
-import { ChevronDown, Download, Search, FileText, X } from 'lucide-react';
+import { ChevronDown, Download, Search, FileText, X, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 
 interface PesagemCompleta {
@@ -27,6 +28,7 @@ const OPCOES_STATUS = ['Pesando', 'Descarregando', 'Pesagem finalizada'];
 
 export default function Relatorios() {
   const { getPesagensCompletas } = useMockApi();
+  const [, setLocation] = useLocation();
   const [pesagens, setPesagens] = useState<PesagemCompleta[]>([]);
   const [filtradas, setFiltradas] = useState<PesagemCompleta[]>([]);
   const [busca, setBusca] = useState('');
@@ -368,8 +370,16 @@ export default function Relatorios() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
+        {/* Header com Botão de Voltar */}
         <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation('/dashboard')}
+            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
           <h1 className="text-3xl font-bold mb-2">Relatório de Pesagens</h1>
           <p className="text-muted-foreground">
             Visualize todas as pesagens realizadas com informações completas
