@@ -5,6 +5,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import CadastroMotorista from "./pages/CadastroMotorista";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Relatorios from "./pages/Relatorios";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/" component={Login} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/relatorios" component={() => <ProtectedRoute component={Relatorios} />} />
+      <Route path="/cadastro-motorista" component={() => <ProtectedRoute component={CadastroMotorista} />} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

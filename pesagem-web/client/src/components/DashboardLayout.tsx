@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, LogOut, Menu, Truck, X } from 'lucide-react';
+import { FileText, LogOut, Menu, Truck, Users, X } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 import { useLocation } from 'wouter';
 
@@ -77,6 +77,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   <FileText className="w-4 h-4" />
                   <span>Relatórios</span>
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setLocation('/cadastro-motorista')}
+                  className="gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Motoristas</span>
+                </Button>
               </div>
 
               <div className="border-l border-gray-200 pl-4 flex items-center gap-3">
@@ -145,6 +153,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Relatórios
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setLocation('/cadastro-motorista');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full justify-start"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Motoristas
               </Button>
               <Button
                 variant="ghost"

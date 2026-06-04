@@ -2,12 +2,14 @@ import { useState, useCallback } from 'react';
 
 // Dados simulados
 const mockMotoristas = [
-  { id: 1, nome: 'João Silva', documento: '12345678901', telefone: '11987654321' },
-  { id: 2, nome: 'Maria Santos', documento: '98765432101', telefone: '11987654322' },
-  { id: 3, nome: 'Pedro Oliveira', documento: '55555555555', telefone: '11987654323' },
-  { id: 4, nome: 'Ana Costa', documento: '44444444444', telefone: '11987654324' },
-  { id: 5, nome: 'Carlos Ferreira', documento: '33333333333', telefone: '11987654325' },
+  { id: 1, nome: 'João Silva', documento: '12345678901', telefone: '11987654321', placa_caminhao: 'ABC-1234' },
+  { id: 2, nome: 'Maria Santos', documento: '98765432101', telefone: '11987654322', placa_caminhao: 'XYZ-5678' },
+  { id: 3, nome: 'Pedro Oliveira', documento: '55555555555', telefone: '11987654323', placa_caminhao: 'DEF-9012' },
+  { id: 4, nome: 'Ana Costa', documento: '44444444444', telefone: '11987654324', placa_caminhao: 'GHI-3456' },
+  { id: 5, nome: 'Carlos Ferreira', documento: '33333333333', telefone: '11987654325', placa_caminhao: 'JKL-7890' },
 ];
+
+let mockMotoristasCadastrados = [...mockMotoristas];
 
 let mockPesagens = [
   {
@@ -50,85 +52,6 @@ let mockPesagens = [
 
 let nextId = 100;
 
-// Dados de pesagens completas (entrada + saída)
-const mockPesagensCompletas = [
-  {
-    id: 1,
-    motorista: {
-      nome: 'João Silva',
-      documento: '123.456.789-00',
-      telefone: '(11) 98765-4321',
-    },
-    placa_caminhao: 'ABC-1234',
-    data_pesagem: '04/06/2026',
-    hora_entrada: '08:30',
-    hora_saida: '09:15',
-    pesagem_inicial: 5000,
-    pesagem_final: 3500,
-    status: 'Pesagem finalizada',
-  },
-  {
-    id: 2,
-    motorista: {
-      nome: 'Maria Santos',
-      documento: '987.654.321-00',
-      telefone: '(11) 99876-5432',
-    },
-    placa_caminhao: 'XYZ-5678',
-    data_pesagem: '04/06/2026',
-    hora_entrada: '09:45',
-    hora_saida: '10:30',
-    pesagem_inicial: 4500,
-    pesagem_final: 2800,
-    status: 'Pesagem finalizada',
-  },
-  {
-    id: 3,
-    motorista: {
-      nome: 'Pedro Costa',
-      documento: '456.789.123-00',
-      telefone: '(11) 97654-3210',
-    },
-    placa_caminhao: 'DEF-9012',
-    data_pesagem: '04/06/2026',
-    hora_entrada: '11:00',
-    hora_saida: '11:45',
-    pesagem_inicial: 6000,
-    pesagem_final: 4200,
-    status: 'Pesagem finalizada',
-  },
-  {
-    id: 4,
-    motorista: {
-      nome: 'Ana Oliveira',
-      documento: '789.123.456-00',
-      telefone: '(11) 96543-2109',
-    },
-    placa_caminhao: 'GHI-3456',
-    data_pesagem: '04/06/2026',
-    hora_entrada: '13:20',
-    hora_saida: '14:05',
-    pesagem_inicial: 5500,
-    pesagem_final: 3900,
-    status: 'Pesagem finalizada',
-  },
-  {
-    id: 5,
-    motorista: {
-      nome: 'Carlos Mendes',
-      documento: '321.654.987-00',
-      telefone: '(11) 95432-1098',
-    },
-    placa_caminhao: 'JKL-7890',
-    data_pesagem: '04/06/2026',
-    hora_entrada: '14:30',
-    hora_saida: '',
-    pesagem_inicial: 4800,
-    pesagem_final: 0,
-    status: 'Pesando',
-  },
-];
-
 export const useMockApi = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +69,7 @@ export const useMockApi = () => {
         await delay();
 
         if (endpoint === '/motoristas') {
-          return mockMotoristas as T;
+          return mockMotoristasCadastrados as T;
         }
 
         if (endpoint === '/pesagens') {
@@ -254,7 +177,28 @@ export const useMockApi = () => {
 
     try {
       await delay();
-      return mockPesagensCompletas;
+      // Gerar relatório dinamicamente com base nas pesagens finalizadas
+      const pesagensFinalizadas = mockPesagens
+        .filter((p) => p.pesagem_final !== null && p.pesagem_final !== undefined && p.pesagem_final > 0)
+        .map((p) => {
+          const motorista = mockMotoristasCadastrados.find((m) => m.id === p.motorista_id);
+          return {
+            id: p.id,
+            motorista: {
+              nome: motorista?.nome || 'Motorista desconhecido',
+              documento: motorista?.documento || '',
+              telefone: motorista?.telefone || '',
+            },
+            placa_caminhao: p.placa_caminhao,
+            data_pesagem: p.data_pesagem,
+            hora_entrada: p.hora_entrada,
+            hora_saida: p.hora_saida || '',
+            pesagem_inicial: p.pesagem_inicial,
+            pesagem_final: (p.pesagem_final as unknown as number) || 0,
+            status: p.status,
+          };
+        });
+      return pesagensFinalizadas as any;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(message);
@@ -264,5 +208,76 @@ export const useMockApi = () => {
     }
   }, []);
 
-  return { request, post, put, isLoading, error, getPesagensCompletas };
+  const postMotorista = useCallback(
+    async <T,>(endpoint: string, body: any): Promise<T> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await delay();
+
+        if (endpoint === '/motoristas') {
+          const novoId = Math.max(...mockMotoristasCadastrados.map((m) => m.id), 0) + 1;
+          const novoMotorista = {
+            id: novoId,
+            nome: body.nome,
+            documento: body.documento,
+            telefone: body.telefone,
+            placa_caminhao: body.placa_caminhao,
+          };
+          mockMotoristasCadastrados.push(novoMotorista);
+          return novoMotorista as T;
+        }
+
+        throw new Error('Endpoint não encontrado');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erro desconhecido';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const putMotorista = useCallback(
+    async <T,>(endpoint: string, body: any): Promise<T> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await delay();
+
+        const match = endpoint.match(/\/motoristas\/(\d+)/);
+        if (match) {
+          const id = parseInt(match[1]);
+          const motoristaIndex = mockMotoristasCadastrados.findIndex((m) => m.id === id);
+
+          if (motoristaIndex === -1) {
+            throw new Error('Motorista não encontrado');
+          }
+
+          const motoristaAtualizado = {
+            ...mockMotoristasCadastrados[motoristaIndex],
+            ...body,
+          };
+
+          mockMotoristasCadastrados[motoristaIndex] = motoristaAtualizado;
+          return motoristaAtualizado as T;
+        }
+
+        throw new Error('Endpoint não encontrado');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erro desconhecido';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  return { request, post, put, isLoading, error, getPesagensCompletas, postMotorista, putMotorista };
 };
