@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Relatorios from "./pages/Relatorios";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated } = useAuth();
@@ -23,6 +24,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Login} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/relatorios" component={() => <ProtectedRoute component={Relatorios} />} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

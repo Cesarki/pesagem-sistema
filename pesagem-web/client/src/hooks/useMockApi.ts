@@ -50,6 +50,85 @@ let mockPesagens = [
 
 let nextId = 100;
 
+// Dados de pesagens completas (entrada + saída)
+const mockPesagensCompletas = [
+  {
+    id: 1,
+    motorista: {
+      nome: 'João Silva',
+      documento: '123.456.789-00',
+      telefone: '(11) 98765-4321',
+    },
+    placa_caminhao: 'ABC-1234',
+    data_pesagem: '04/06/2026',
+    hora_entrada: '08:30',
+    hora_saida: '09:15',
+    pesagem_inicial: 5000,
+    pesagem_final: 3500,
+    status: 'Pesagem finalizada',
+  },
+  {
+    id: 2,
+    motorista: {
+      nome: 'Maria Santos',
+      documento: '987.654.321-00',
+      telefone: '(11) 99876-5432',
+    },
+    placa_caminhao: 'XYZ-5678',
+    data_pesagem: '04/06/2026',
+    hora_entrada: '09:45',
+    hora_saida: '10:30',
+    pesagem_inicial: 4500,
+    pesagem_final: 2800,
+    status: 'Pesagem finalizada',
+  },
+  {
+    id: 3,
+    motorista: {
+      nome: 'Pedro Costa',
+      documento: '456.789.123-00',
+      telefone: '(11) 97654-3210',
+    },
+    placa_caminhao: 'DEF-9012',
+    data_pesagem: '04/06/2026',
+    hora_entrada: '11:00',
+    hora_saida: '11:45',
+    pesagem_inicial: 6000,
+    pesagem_final: 4200,
+    status: 'Pesagem finalizada',
+  },
+  {
+    id: 4,
+    motorista: {
+      nome: 'Ana Oliveira',
+      documento: '789.123.456-00',
+      telefone: '(11) 96543-2109',
+    },
+    placa_caminhao: 'GHI-3456',
+    data_pesagem: '04/06/2026',
+    hora_entrada: '13:20',
+    hora_saida: '14:05',
+    pesagem_inicial: 5500,
+    pesagem_final: 3900,
+    status: 'Pesagem finalizada',
+  },
+  {
+    id: 5,
+    motorista: {
+      nome: 'Carlos Mendes',
+      documento: '321.654.987-00',
+      telefone: '(11) 95432-1098',
+    },
+    placa_caminhao: 'JKL-7890',
+    data_pesagem: '04/06/2026',
+    hora_entrada: '14:30',
+    hora_saida: '',
+    pesagem_inicial: 4800,
+    pesagem_final: 0,
+    status: 'Pesando',
+  },
+];
+
 export const useMockApi = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -169,5 +248,21 @@ export const useMockApi = () => {
     []
   );
 
-  return { request, post, put, isLoading, error };
+  const getPesagensCompletas = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await delay();
+      return mockPesagensCompletas;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { request, post, put, isLoading, error, getPesagensCompletas };
 };
