@@ -27,7 +27,7 @@ interface PesagemCompleta {
 const OPCOES_STATUS = ['Pesando', 'Descarregando', 'Pesagem finalizada'];
 
 export default function Relatorios() {
-  const { getPesagensCompletas } = useMockApi();
+  const { get } = useMockApi();
   const [, setLocation] = useLocation();
   const [pesagens, setPesagens] = useState<PesagemCompleta[]>([]);
   const [filtradas, setFiltradas] = useState<PesagemCompleta[]>([]);
@@ -41,7 +41,7 @@ export default function Relatorios() {
     const carregarPesagens = async () => {
       setLoading(true);
       try {
-        const dados = await getPesagensCompletas();
+        const dados = await get<PesagemCompleta[]>('/pesagens');
         setPesagens(dados);
         setFiltradas(dados);
       } catch (err) {
@@ -52,7 +52,7 @@ export default function Relatorios() {
       }
     };
     carregarPesagens();
-  }, [getPesagensCompletas]);
+  }, [get]);
 
   // Aplicar filtros
   useEffect(() => {

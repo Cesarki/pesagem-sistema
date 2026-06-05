@@ -28,7 +28,7 @@ interface Pesagem {
 }
 
 export default function Sistema1() {
-  const { post, request, isLoading } = useMockApi();
+  const { get, post, isLoading } = useMockApi();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [pesagens, setPesagens] = useState<Pesagem[]>([]);
   const [loadingMotoristas, setLoadingMotoristas] = useState(true);
@@ -48,7 +48,7 @@ export default function Sistema1() {
   useEffect(() => {
     const loadMotoristas = async () => {
       try {
-        const data = await request<Motorista[]>('/motoristas');
+        const data = await get<Motorista[]>('/motoristas');
         setMotoristas(data);
       } catch (err) {
         toast.error('Erro ao carregar motoristas');
@@ -58,13 +58,13 @@ export default function Sistema1() {
     };
 
     loadMotoristas();
-  }, [request]);
+  }, [get]);
 
   // Carregar pesagens
   useEffect(() => {
     const loadPesagens = async () => {
       try {
-        const data = await request<Pesagem[]>('/pesagens');
+        const data = await get<Pesagem[]>('/pesagens');
         setPesagens(data || []);
       } catch (err) {
         toast.error('Erro ao carregar pesagens');
@@ -74,7 +74,7 @@ export default function Sistema1() {
     };
 
     loadPesagens();
-  }, [request]);
+  }, [get]);
 
   const handleMotoristaChange = (motoristaId: string) => {
     setFormData({ ...formData, motorista_id: motoristaId });
@@ -105,7 +105,7 @@ export default function Sistema1() {
       });
 
       // Recarregar lista de pesagens para evitar duplicacao
-      const data = await request<Pesagem[]>('/pesagens');
+      const data = await get<Pesagem[]>('/pesagens');
       setPesagens(data || []);
 
       setFormData({

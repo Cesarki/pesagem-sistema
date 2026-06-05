@@ -17,7 +17,7 @@ interface Motorista {
 }
 
 export default function CadastroMotorista() {
-  const { request, postMotorista, putMotorista, deleteMotorista, isLoading } = useMockApi();
+  const { get, post, put, delete: delete_, isLoading } = useMockApi();
   const [, setLocation] = useLocation();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ export default function CadastroMotorista() {
     const carregarMotoristas = async () => {
       setLoading(true);
       try {
-        const dados = await request<Motorista[]>('/motoristas');
+        const dados = await get<Motorista[]>('/motoristas');
         setMotoristas(dados);
       } catch (err) {
         toast.error('Erro ao carregar motoristas');
@@ -47,7 +47,7 @@ export default function CadastroMotorista() {
     };
 
     carregarMotoristas();
-  }, [request]);
+  }, [get]);
 
   const limparFormulario = () => {
     setFormData({
@@ -86,15 +86,15 @@ export default function CadastroMotorista() {
     try {
       if (editandoId) {
         // Atualizar motorista existente
-        await putMotorista(`/motoristas/${editandoId}`, formData);
+        await put<Motorista>(`/motoristas/${editandoId}`, formData);
         setMotoristas((prev) =>
           prev.map((m) => (m.id === editandoId ? { ...m, ...formData } : m))
         );
         toast.success('Motorista atualizado com sucesso!');
       } else {
         // Criar novo motorista
-        const novoMotorista = await postMotorista('/motoristas', formData);
-        setMotoristas((prev) => [novoMotorista as Motorista, ...prev]);
+        const novoMotorista = await post<Motorista>('/motoristas', formData);
+        setMotoristas((prev) => [novoMotorista, ...prev]);
         toast.success('Motorista cadastrado com sucesso!');
       }
       limparFormulario();
@@ -120,7 +120,7 @@ export default function CadastroMotorista() {
   const handleDeletar = async (id: number) => {
     if (confirm('Tem certeza que deseja deletar este motorista?')) {
       try {
-        await deleteMotorista(`/motoristas/${id}`);
+        await delete_<Motorista>(`/motoristas/${id}`);
         setMotoristas((prev) => prev.filter((m) => m.id !== id));
         toast.success('Motorista deletado com sucesso!');
       } catch (err) {

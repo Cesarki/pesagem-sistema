@@ -29,7 +29,7 @@ interface Motorista {
 }
 
 export default function Sistema2() {
-  const { request, put, isLoading } = useMockApi();
+  const { get, put, isLoading } = useMockApi();
   const [pesagensAbiertas, setPesagensAbiertas] = useState<Pesagem[]>([]);
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [loadingPesagens, setLoadingPesagens] = useState(true);
@@ -45,7 +45,7 @@ export default function Sistema2() {
   useEffect(() => {
     const loadMotoristas = async () => {
       try {
-        const data = await request<Motorista[]>('/motoristas');
+        const data = await get<Motorista[]>('/motoristas');
         setMotoristas(data);
       } catch (err) {
         console.error('Erro ao carregar motoristas');
@@ -53,13 +53,13 @@ export default function Sistema2() {
     };
 
     loadMotoristas();
-  }, [request]);
+  }, [get]);
 
   // Carregar pesagens pendentes
   const loadPesagensAbiertas = async () => {
     setLoadingPesagens(true);
     try {
-      const data = await request<Pesagem[]>('/pesagens/pendentes');
+      const data = await get<Pesagem[]>('/pesagens/pendentes');
       setPesagensAbiertas(data || []);
     } catch (err) {
       toast.error('Erro ao carregar pesagens pendentes');
@@ -72,7 +72,7 @@ export default function Sistema2() {
     loadPesagensAbiertas();
     const interval = setInterval(loadPesagensAbiertas, 5000); // Atualizar a cada 5 segundos
     return () => clearInterval(interval);
-  }, [request]);
+  }, [get]);
 
   const handleSelectPesagem = (pesagem: Pesagem) => {
     setSelectedPesagem(pesagem);
