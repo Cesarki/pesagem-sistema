@@ -8,20 +8,25 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 
+interface Motorista {
+  id: number;
+  nome: string;
+  documento: string;
+  telefone: string;
+  placa_caminhao: string;
+}
+
 interface PesagemCompleta {
   id: number;
-  motorista: {
-    nome: string;
-    documento: string;
-    telefone: string;
-  };
+  motorista_id: number;
   placa_caminhao: string;
   data_pesagem: string;
   hora_entrada: string;
-  hora_saida: string;
+  hora_saida?: string;
   pesagem_inicial: number;
-  pesagem_final: number;
+  pesagem_final?: number;
   status: string;
+  criado_em?: string;
 }
 
 const OPCOES_STATUS = ['Pesando', 'Descarregando', 'Pesagem finalizada'];
@@ -31,6 +36,7 @@ export default function Relatorios() {
   const [, setLocation] = useLocation();
   const [pesagens, setPesagens] = useState<PesagemCompleta[]>([]);
   const [filtradas, setFiltradas] = useState<PesagemCompleta[]>([]);
+  const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [busca, setBusca] = useState('');
   const [codigoTicket, setCodigoTicket] = useState('');
   const [statusSelecionado, setStatusSelecionado] = useState<string>('');
@@ -38,12 +44,16 @@ export default function Relatorios() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const carregarPesagens = async () => {
+    const carregarDados = async () => {
       setLoading(true);
       try {
-        const dados = await get<PesagemCompleta[]>('/pesagens');
-        setPesagens(dados);
-        setFiltradas(dados);
+        const [pesagensData, motoristasData] = await Promise.all([
+          get<PesagemCompleta[]>('/pesagens'),
+          get<Motorista[]>('/motoristas'),
+        ]);
+        setPesagens(pesagensData || []);
+        setFiltradas(pesagensData || []);
+        setMotoristas(motoristasData || []);
       } catch (err) {
         toast.error('Erro ao carregar relatórios');
         console.error(err);
@@ -51,7 +61,7 @@ export default function Relatorios() {
         setLoading(false);
       }
     };
-    carregarPesagens();
+    carregarDados();
   }, [get]);
 
   // Aplicar filtros
@@ -246,8 +256,9 @@ export default function Relatorios() {
       // Adicionar cada pesagem ao relatório
       let htmlItems = '';
       filtradas.forEach((pesagem) => {
+        const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
         const statusClass = `status-${pesagem.status.toLowerCase().replace(/\s+/g, '-')}`;
-        const diferenca = pesagem.pesagem_final - pesagem.pesagem_inicial;
+        const diferenca = (pesagem.pesagem_final || 0) - pesagem.pesagem_inicial;
         
         htmlItems += `
           <div class="pesagem-item">
@@ -261,15 +272,15 @@ export default function Relatorios() {
               <div class="info-grid">
                 <div class="info-item">
                   <div class="info-label">Nome</div>
-                  <div class="info-value">${pesagem.motorista.nome}</div>
+                  <div class="info-value">${motorista?.nome || 'N/A'}</div>
                 </div>
                 <div class="info-item">
                   <div class="info-label">Documento</div>
-                  <div class="info-value">${pesagem.motorista.documento}</div>
+                  <div class="info-value">${motorista?.documento || 'N/A'}</div>
                 </div>
                 <div class="info-item">
                   <div class="info-label">Telefone</div>
-                  <div class="info-value">${pesagem.motorista.telefone}</div>
+                  <div class="info-value">${motorista?.telefone || 'N/A'}</div>
                 </div>
                 <div class="info-item">
                   <div class="info-label">Placa do Caminhão</div>
