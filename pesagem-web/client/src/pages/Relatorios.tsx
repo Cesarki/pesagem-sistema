@@ -491,7 +491,9 @@ export default function Relatorios() {
               </CardContent>
             </Card>
           ) : (
-            filtradas.map((pesagem) => (
+            filtradas.map((pesagem) => {
+              const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
+              return (
               <Card key={pesagem.id} className="overflow-hidden">
                 <button
                   onClick={() => setExpandido(expandido === pesagem.id ? null : pesagem.id)}
@@ -509,7 +511,7 @@ export default function Relatorios() {
                           </span>
                         </div>
                         <CardDescription>
-                          {pesagem.motorista.nome} • {pesagem.placa_caminhao}
+                          {motorista?.nome || 'Motorista desconhecido'} • {pesagem.placa_caminhao}
                         </CardDescription>
                       </div>
                       <ChevronDown
@@ -530,15 +532,15 @@ export default function Relatorios() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-xs text-muted-foreground">Nome</p>
-                            <p className="font-medium">{pesagem.motorista.nome}</p>
+                            <p className="font-medium">{motorista?.nome || 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Documento</p>
-                            <p className="font-medium">{pesagem.motorista.documento}</p>
+                            <p className="font-medium">{motorista?.documento || 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Telefone</p>
-                            <p className="font-medium">{pesagem.motorista.telefone}</p>
+                            <p className="font-medium">{motorista?.telefone || 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Placa do Caminhão</p>
@@ -580,13 +582,13 @@ export default function Relatorios() {
                             <div>
                               <p className="text-xs text-muted-foreground">Peso Final</p>
                               <p className="text-2xl font-bold text-orange-600">
-                                {pesagem.pesagem_final.toFixed(2)} kg
+                                {(pesagem.pesagem_final || 0).toFixed(2)} kg
                               </p>
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Diferença (Líquido)</p>
                               <p className="text-2xl font-bold text-green-600">
-                                {calcularDiferenca(pesagem.pesagem_inicial, pesagem.pesagem_final).toFixed(2)} kg
+                                {calcularDiferenca(pesagem.pesagem_inicial, pesagem.pesagem_final || 0).toFixed(2)} kg
                               </p>
                             </div>
                           </div>
@@ -596,7 +598,8 @@ export default function Relatorios() {
                   </CardContent>
                 )}
               </Card>
-            ))
+            );
+            })
           )}
         </div>
       </div>
