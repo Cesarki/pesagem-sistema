@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 // Servir arquivos estáticos da pasta public
-app.use(express.static('public'));
+app.use(express.static('dist/public'));
 
 // ============ ROTAS DE PESAGENS ============
 
@@ -182,7 +182,7 @@ app.delete('/api/motoristas/:id', async (req, res) => {
 
 // SPA - Servir index.html para rotas não encontradas
 app.get('*', (req, res) => {
-  res.sendFile('public/index.html', { root: '.' });
+  res.sendFile('dist/public/index.html', { root: '.' });
 });
 
 const PORT = process.env.PORT || 3000;
