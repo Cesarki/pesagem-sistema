@@ -82,10 +82,11 @@ export default function Relatorios() {
 
       // Filtro por busca geral (motorista, placa, documento, data)
       if (termo) {
+        const motorista = motoristas.find((m) => m.id === p.motorista_id);
         return (
-          p.motorista.nome.toLowerCase().includes(termo) ||
+          (motorista?.nome || '').toLowerCase().includes(termo) ||
           p.placa_caminhao.toLowerCase().includes(termo) ||
-          p.motorista.documento.includes(termo) ||
+          (motorista?.documento || '').includes(termo) ||
           p.data_pesagem.includes(termo)
         );
       }
@@ -313,15 +314,15 @@ export default function Relatorios() {
                 <div class="pesagens-grid">
                   <div class="peso-item">
                     <div class="peso-label">Peso Inicial</div>
-                    <div class="peso-valor peso-inicial">${pesagem.pesagem_inicial.toFixed(2)} kg</div>
+                    <div class="peso-valor peso-inicial">${parseFloat(String(pesagem.pesagem_inicial)).toFixed(2)} kg</div>
                   </div>
                   <div class="peso-item">
                     <div class="peso-label">Peso Final</div>
-                    <div class="peso-valor peso-final">${pesagem.pesagem_final.toFixed(2)} kg</div>
+                    <div class="peso-valor peso-final">${parseFloat(String(pesagem.pesagem_final || 0)).toFixed(2)} kg</div>
                   </div>
                   <div class="peso-item">
                     <div class="peso-label">Diferença (Líquido)</div>
-                    <div class="peso-valor peso-liquido">${diferenca.toFixed(2)} kg</div>
+                    <div class="peso-valor peso-liquido">${parseFloat(String(diferenca)).toFixed(2)} kg</div>
                   </div>
                 </div>
               </div>
@@ -576,13 +577,13 @@ export default function Relatorios() {
                             <div>
                               <p className="text-xs text-muted-foreground">Peso Inicial</p>
                               <p className="text-2xl font-bold text-blue-600">
-                                {pesagem.pesagem_inicial.toFixed(2)} kg
+                                {parseFloat(String(pesagem.pesagem_inicial)).toFixed(2)} kg
                               </p>
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Peso Final</p>
                               <p className="text-2xl font-bold text-orange-600">
-                                {(pesagem.pesagem_final || 0).toFixed(2)} kg
+                                {parseFloat(String(pesagem.pesagem_final || 0)).toFixed(2)} kg
                               </p>
                             </div>
                             <div>
