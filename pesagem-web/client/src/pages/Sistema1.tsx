@@ -96,7 +96,7 @@ export default function Sistema1() {
     }
 
     try {
-      const novaPesagem = await post<Pesagem>('/pesagens', {
+      await post<Pesagem>('/pesagens', {
         motorista_id: parseInt(formData.motorista_id),
         placa_caminhao: placaSelecionada,
         data_pesagem: formData.data_pesagem,
@@ -104,7 +104,10 @@ export default function Sistema1() {
         pesagem_inicial: parseFloat(formData.pesagem_inicial),
       });
 
-      setPesagens([novaPesagem, ...pesagens]);
+      // Recarregar lista de pesagens para evitar duplicacao
+      const data = await request<Pesagem[]>('/pesagens');
+      setPesagens(data || []);
+
       setFormData({
         motorista_id: '',
         data_pesagem: new Date().toISOString().split('T')[0],
@@ -112,6 +115,7 @@ export default function Sistema1() {
         pesagem_inicial: '',
       });
       setPlacaSelecionada('');
+      setMostrarPlaca(false);
 
       toast.success('Pesagem criada com sucesso!');
     } catch (err) {
