@@ -3,9 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMockApi } from '@/hooks/useMockApi';
-import { AlertCircle, CheckCircle, Loader2, Truck, AlertTriangle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Truck, AlertTriangle, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -40,7 +39,6 @@ export default function Sistema2() {
 
   const [formData, setFormData] = useState({
     pesagem_final: '',
-    status: 'Pesagem finalizada',
   });
 
   // Carregar motoristas
@@ -80,14 +78,39 @@ export default function Sistema2() {
     setSelectedPesagem(pesagem);
     setFormData({
       pesagem_final: '',
-      status: 'Pesagem finalizada',
     });
     setShowDialog(true);
   };
 
+  // Determinar se é primeira interação (status = Pesando)
+  const isPrimeiraInteracao = selectedPesagem?.status === 'Pesando';
+
   const handleFinalizarPesagem = async () => {
-    if (!selectedPesagem || !formData.pesagem_final) {
-      toast.error('Preencha a pesagem final');
+    if (!selectedPesagem) return;
+
+    // Se é primeira interação, apenas marca como descarregando (sem peso final)
+    if (isPrimeiraInteracao) {
+      setFinalizandoId(selectedPesagem.id);
+      try {
+        await put(`/pesagens/${selectedPesagem.id}`, {
+          status: 'Descarregando',
+        });
+
+        toast.success('⏳ Caminhão marcado como descarregando. Aguardando descarga...');
+        setShowDialog(false);
+        setSelectedPesagem(null);
+        await loadPesagensAbiertas();
+      } catch (err) {
+        toast.error('Erro ao atualizar pesagem');
+      } finally {
+        setFinalizandoId(null);
+      }
+      return;
+    }
+
+    // Se já está descarregando, agora precisa do peso final
+    if (!formData.pesagem_final) {
+      toast.error('Preencha o peso final para finalizar a pesagem');
       return;
     }
 
@@ -99,8 +122,8 @@ export default function Sistema2() {
       return;
     }
 
-    if (formData.status === 'Pesagem finalizada' && pesagemFinal === 0) {
-      toast.error('Peso final não pode ser zero para pesagem finalizada');
+    if (pesagemFinal === 0) {
+      toast.error('Peso final não pode ser zero');
       return;
     }
 
@@ -109,21 +132,15 @@ export default function Sistema2() {
     try {
       await put(`/pesagens/${selectedPesagem.id}`, {
         pesagem_final: pesagemFinal,
-        status: formData.status,
+        status: 'Pesagem finalizada',
       });
 
-      // Mensagens diferenciadas por status
-      if (formData.status === 'Pesagem finalizada') {
-        toast.success('✅ Pesagem finalizada com sucesso!');
-      } else {
-        toast.success('⏳ Caminhão marcado como descarregando');
-      }
-
+      toast.success('✅ Pesagem finalizada com sucesso!');
       setShowDialog(false);
       setSelectedPesagem(null);
       await loadPesagensAbiertas();
     } catch (err) {
-      toast.error('Erro ao atualizar pesagem');
+      toast.error('Erro ao finalizar pesagem');
     } finally {
       setFinalizandoId(null);
     }
@@ -140,7 +157,7 @@ export default function Sistema2() {
       <div>
         <h2 className="text-3xl font-bold text-gray-900">Sistema 2 - Saída de Caminhões</h2>
         <p className="text-gray-600 mt-1">
-          Finalize as pesagens registrando o peso final e o status de saída
+          Gerencie o descarregamento e finalize as pesagens dos caminhões
         </p>
       </div>
 
@@ -172,7 +189,7 @@ export default function Sistema2() {
           <CardContent className="pt-6">
             <div className="text-center">
               <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Pesando</p>
+              <p className="text-sm text-gray-600">Aguardando Ação</p>
               <p className="text-3xl font-bold text-gray-900">
                 {pesagensAbiertas.filter((p) => p.status === 'Pesando').length}
               </p>
@@ -184,9 +201,9 @@ export default function Sistema2() {
       {/* Lista de Pesagens */}
       <Card>
         <CardHeader>
-          <CardTitle>Pesagens Aguardando Finalização</CardTitle>
+          <CardTitle>Pesagens Aguardando Ação</CardTitle>
           <CardDescription>
-            Clique em uma pesagem para registrar a saída do caminhão
+            Clique em uma pesagem para iniciar o descarregamento ou finalizar
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -204,6 +221,8 @@ export default function Sistema2() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {pesagensAbiertas.map((pesagem) => {
                 const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
+                const isPrimeira = pesagem.status === 'Pesando';
+
                 return (
                   <div
                     key={pesagem.id}
@@ -224,7 +243,7 @@ export default function Sistema2() {
                             : 'bg-blue-100 text-blue-800'
                         }`}
                       >
-                        {pesagem.status}
+                        {isPrimeira ? '🚚 Aguardando' : pesagem.status}
                       </div>
                     </div>
 
@@ -239,6 +258,14 @@ export default function Sistema2() {
                       </div>
                     </div>
 
+                    {isPrimeira && (
+                      <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                        <p className="text-xs text-blue-700">
+                          <span className="font-semibold">Próximo passo:</span> Iniciar descarregamento
+                        </p>
+                      </div>
+                    )}
+
                     <div className="pt-3 border-t border-gray-100 text-xs text-gray-500">
                       ID: {pesagem.id} • {new Date(pesagem.criado_em).toLocaleString('pt-BR')}
                     </div>
@@ -250,13 +277,17 @@ export default function Sistema2() {
         </CardContent>
       </Card>
 
-      {/* Dialog para finalizar pesagem */}
+      {/* Dialog para ação */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Finalizar Pesagem</DialogTitle>
+            <DialogTitle>
+              {isPrimeiraInteracao ? 'Iniciar Descarregamento' : 'Finalizar Pesagem'}
+            </DialogTitle>
             <DialogDescription>
-              Registre o peso final e o status de saída do caminhão
+              {isPrimeiraInteracao
+                ? 'Marque o caminhão como descarregando'
+                : 'Registre o peso final para finalizar'}
             </DialogDescription>
           </DialogHeader>
 
@@ -284,80 +315,68 @@ export default function Sistema2() {
                 </div>
               </div>
 
-              {/* Formulário */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pesagem-final">Peso Final (kg) *</Label>
-                  <Input
-                    id="pesagem-final"
-                    type="number"
-                    placeholder="0.00"
-                    value={formData.pesagem_final}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pesagem_final: e.target.value })
-                    }
-                    disabled={finalizandoId === selectedPesagem.id}
-                    step="0.01"
-                    min="0"
-                  />
+              {/* Fluxo: Primeira interação */}
+              {isPrimeiraInteracao ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3">
+                  <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-800 mb-1">Primeira Ação</p>
+                    <p className="text-sm text-blue-700">
+                      Clique em "Iniciar Descarregamento" para marcar o caminhão como descarregando.
+                      O peso final será registrado quando a descarga terminar.
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {/* Fluxo: Segunda interação (descarregando) */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="pesagem-final">Peso Final (kg) *</Label>
+                      <Input
+                        id="pesagem-final"
+                        type="number"
+                        placeholder="0.00"
+                        value={formData.pesagem_final}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pesagem_final: e.target.value })
+                        }
+                        disabled={finalizandoId === selectedPesagem.id}
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
 
-                {formData.pesagem_final && (
-                  <>
-                    {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final) > 0 ? (
-                      <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex gap-3">
-                        <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-semibold text-red-800 mb-1">
-                            Atenção!
-                          </p>
-                          <p className="text-sm text-red-700">
-                            Este caminhão está saindo com o peso maior do que quando chegou. Verifique!
-                          </p>
-                          <p className="text-sm text-red-600 mt-2">
-                            <span className="font-semibold">Diferença de peso:</span> +{calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <p className="text-sm text-blue-800">
-                          <span className="font-semibold">Diferença de peso:</span>{' '}
-                          {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
-                        </p>
-                      </div>
+                    {formData.pesagem_final && (
+                      <>
+                        {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final) > 0 ? (
+                          <div className="bg-red-50 border border-red-300 rounded-lg p-4 flex gap-3">
+                            <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-semibold text-red-800 mb-1">
+                                Atenção!
+                              </p>
+                              <p className="text-sm text-red-700">
+                                Este caminhão está saindo com o peso maior do que quando chegou. Verifique!
+                              </p>
+                              <p className="text-sm text-red-600 mt-2">
+                                <span className="font-semibold">Diferença de peso:</span> +{calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p className="text-sm text-blue-800">
+                              <span className="font-semibold">Diferença de peso:</span>{' '}
+                              {calcularDiferenca(selectedPesagem.pesagem_inicial, formData.pesagem_final)} kg
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status da Saída *</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value })
-                    }
-                    disabled={finalizandoId === selectedPesagem.id}
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pesagem finalizada">
-                        ✅ Pesagem Finalizada (Saída completa)
-                      </SelectItem>
-                      <SelectItem value="Descarregando">
-                        ⏳ Descarregando (Continua em andamento)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500">
-                    {formData.status === 'Pesagem finalizada'
-                      ? 'Caminhão sairá do sistema após confirmação'
-                      : 'Caminhão continuará pendente para finalização posterior'}
-                  </p>
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
 
               {/* Botões */}
               <div className="flex gap-2 pt-4">
@@ -371,24 +390,27 @@ export default function Sistema2() {
                 </Button>
                 <Button
                   onClick={handleFinalizarPesagem}
-                  disabled={finalizandoId === selectedPesagem.id || !formData.pesagem_final}
+                  disabled={
+                    finalizandoId === selectedPesagem.id ||
+                    (!isPrimeiraInteracao && !formData.pesagem_final)
+                  }
                   className="flex-1"
-                  variant={formData.status === 'Pesagem finalizada' ? 'default' : 'secondary'}
+                  variant={isPrimeiraInteracao ? 'secondary' : 'default'}
                 >
                   {finalizandoId === selectedPesagem.id ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Salvando...
                     </>
-                  ) : formData.status === 'Pesagem finalizada' ? (
+                  ) : isPrimeiraInteracao ? (
                     <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Finalizar Pesagem
+                      <AlertCircle className="mr-2 h-4 w-4" />
+                      Iniciar Descarregamento
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="mr-2 h-4 w-4" />
-                      Marcar como Descarregando
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Finalizar Pesagem
                     </>
                   )}
                 </Button>
