@@ -74,7 +74,8 @@ let mockPesagens = [
   },
 ];
 
-let nextId = 100;
+// Inicializar nextId com o maior ID existente + 1
+let nextId = Math.max(...mockPesagens.map((p) => p.id), 0) + 1;
 
 export const useMockApi = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +102,10 @@ export const useMockApi = () => {
         }
 
         if (endpoint === '/pesagens/pendentes') {
-          const pendentes = mockPesagens.filter((p) => p.pesagem_final === null);
+          // Retornar pesagens que ainda nao foram finalizadas (Pesando ou Descarregando)
+          const pendentes = mockPesagens.filter(
+            (p) => p.pesagem_final === null || p.status === 'Descarregando'
+          );
           return pendentes as T;
         }
 
