@@ -205,9 +205,8 @@ export const useMockApi = () => {
 
     try {
       await delay();
-      // Retornar apenas pesagens finalizadas (com pesagem_final preenchida)
+      // Retornar TODAS as pesagens (Pesando, Descarregando, Finalizada)
       const pesagensCompletas = mockPesagens
-        .filter((p) => p.pesagem_final !== null && p.pesagem_final !== undefined && p.pesagem_final > 0)
         .map((p) => {
           const motorista = mockMotoristasCadastrados.find((m) => m.id === p.motorista_id);
           return {
@@ -222,7 +221,7 @@ export const useMockApi = () => {
             hora_entrada: p.hora_entrada,
             hora_saida: p.hora_saida || '',
             pesagem_inicial: p.pesagem_inicial,
-            pesagem_final: p.pesagem_final as number,
+            pesagem_final: p.pesagem_final || 0,
             status: p.status,
           };
         });
