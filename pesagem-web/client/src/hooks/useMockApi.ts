@@ -4,16 +4,18 @@ export const useMockApi = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const request = useCallback(
+  const get = useCallback(
     async <T,>(endpoint: string): Promise<T> => {
       setIsLoading(true);
       setError(null);
 
       try {
         const response = await fetch(`/api${endpoint}`);
+        
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`Erro ao buscar dados: ${response.statusText}`);
         }
+
         const data = await response.json();
         return data as T;
       } catch (err) {
@@ -35,12 +37,15 @@ export const useMockApi = () => {
       try {
         const response = await fetch(`/api${endpoint}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(body),
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Erro ao criar: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -64,12 +69,15 @@ export const useMockApi = () => {
       try {
         const response = await fetch(`/api${endpoint}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(body),
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Erro ao atualizar: ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -85,20 +93,26 @@ export const useMockApi = () => {
     []
   );
 
-  const deleteRequest = useCallback(
-    async (endpoint: string): Promise<void> => {
+  const delete_ = useCallback(
+    async <T,>(endpoint: string): Promise<T> => {
       setIsLoading(true);
       setError(null);
 
       try {
         const response = await fetch(`/api${endpoint}`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Erro ao deletar: ${response.statusText}`);
         }
+
+        const data = await response.json();
+        return data as T;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Erro desconhecido';
         setError(message);
@@ -110,5 +124,12 @@ export const useMockApi = () => {
     []
   );
 
-  return { request, post, put, deleteRequest, isLoading, error };
+  return {
+    get,
+    post,
+    put,
+    delete: delete_,
+    isLoading,
+    error,
+  };
 };

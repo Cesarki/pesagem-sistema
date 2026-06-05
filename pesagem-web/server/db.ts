@@ -1,10 +1,13 @@
-import { Pool } from 'pg';
+import pg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const { Pool } = pg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('error', (err) => {
@@ -18,5 +21,3 @@ export const query = (text: string, params?: any[]) => {
 export const getClient = async () => {
   return pool.connect();
 };
-
-export default pool;
