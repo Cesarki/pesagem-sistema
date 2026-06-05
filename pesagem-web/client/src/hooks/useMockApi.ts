@@ -201,9 +201,8 @@ export const useMockApi = () => {
 
     try {
       await delay();
-      // Gerar relatório dinamicamente com base nas pesagens finalizadas
-      const pesagensFinalizadas = mockPesagens
-        .filter((p) => p.pesagem_final !== null && p.pesagem_final !== undefined && p.pesagem_final > 0)
+      // Retornar todas as pesagens (Pesando, Descarregando, Finalizada)
+      const pesagensCompletas = mockPesagens
         .map((p) => {
           const motorista = mockMotoristasCadastrados.find((m) => m.id === p.motorista_id);
           return {
@@ -222,7 +221,7 @@ export const useMockApi = () => {
             status: p.status,
           };
         });
-      return pesagensFinalizadas as any;
+      return pesagensCompletas as any;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(message);
