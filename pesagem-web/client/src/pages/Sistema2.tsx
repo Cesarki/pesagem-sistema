@@ -7,6 +7,7 @@ import { useMockApi } from '@/hooks/useMockApi';
 import { AlertCircle, CheckCircle, Loader2, Truck, AlertTriangle, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/utils';
 
 interface Pesagem {
   id: number;
@@ -247,7 +248,11 @@ export default function Sistema2() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-sm mb-3">
+                    <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+                      <div>
+                        <p className="text-gray-500">Data</p>
+                        <p className="font-medium text-gray-900">{formatDate(pesagem.data_pesagem)}</p>
+                      </div>
                       <div>
                         <p className="text-gray-500">Entrada</p>
                         <p className="font-medium text-gray-900">{pesagem.hora_entrada}</p>
@@ -308,6 +313,10 @@ export default function Sistema2() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Peso Inicial:</span>
                   <span className="font-medium text-gray-900">{selectedPesagem.pesagem_inicial} kg</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Data:</span>
+                  <span className="font-medium text-gray-900">{formatDate(selectedPesagem.data_pesagem)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Entrada:</span>

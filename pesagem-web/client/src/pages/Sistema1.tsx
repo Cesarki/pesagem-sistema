@@ -7,6 +7,7 @@ import { useMockApi } from '@/hooks/useMockApi';
 import { AlertCircle, CheckCircle, Loader2, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/utils';
 
 interface Motorista {
   id: number;
@@ -293,7 +294,11 @@ export default function Sistema1() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                          <div>
+                            <p className="text-gray-500">Data</p>
+                            <p className="font-medium text-gray-900">{formatDate(pesagem.data_pesagem)}</p>
+                          </div>
                           <div>
                             <p className="text-gray-500">Hora de Entrada</p>
                             <p className="font-medium text-gray-900">{pesagem.hora_entrada}</p>

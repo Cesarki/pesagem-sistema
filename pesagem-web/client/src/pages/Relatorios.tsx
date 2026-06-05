@@ -7,6 +7,7 @@ import { ChevronDown, Download, Search, FileText, X, ArrowLeft } from 'lucide-re
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/utils';
 
 interface Motorista {
   id: number;
@@ -295,7 +296,7 @@ export default function Relatorios() {
               <div class="info-grid">
                 <div class="info-item">
                   <div class="info-label">Data</div>
-                  <div class="info-value">${pesagem.data_pesagem}</div>
+                  <div class="info-value">${formatDate(pesagem.data_pesagem)}</div>
                 </div>
                 <div class="info-item">
                   <div class="info-label">Hora Entrada</div>
@@ -556,7 +557,7 @@ export default function Relatorios() {
                         <div className="grid grid-cols-3 gap-4">
                           <div>
                             <p className="text-xs text-muted-foreground">Data</p>
-                            <p className="font-medium">{pesagem.data_pesagem}</p>
+                            <p className="font-medium">{formatDate(pesagem.data_pesagem)}</p>
                           </div>
                           <div>
                             <p className="text-xs text-muted-foreground">Hora Entrada</p>
