@@ -17,7 +17,7 @@ interface Motorista {
 }
 
 export default function CadastroMotorista() {
-  const { request, postMotorista, putMotorista, isLoading } = useMockApi();
+  const { request, postMotorista, putMotorista, deleteMotorista, isLoading } = useMockApi();
   const [, setLocation] = useLocation();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,10 +117,16 @@ export default function CadastroMotorista() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDeletar = (id: number) => {
+  const handleDeletar = async (id: number) => {
     if (confirm('Tem certeza que deseja deletar este motorista?')) {
-      setMotoristas((prev) => prev.filter((m) => m.id !== id));
-      toast.success('Motorista deletado com sucesso!');
+      try {
+        await deleteMotorista(`/motoristas/${id}`);
+        setMotoristas((prev) => prev.filter((m) => m.id !== id));
+        toast.success('Motorista deletado com sucesso!');
+      } catch (err) {
+        toast.error('Erro ao deletar motorista');
+        console.error(err);
+      }
     }
   };
 

@@ -42,6 +42,7 @@ export default function Sistema1() {
   });
 
   const [placaSelecionada, setPlacaSelecionada] = useState('');
+  const [mostrarPlaca, setMostrarPlaca] = useState(false);
 
   // Carregar motoristas
   useEffect(() => {
@@ -80,6 +81,9 @@ export default function Sistema1() {
     const motorista = motoristas.find((m) => m.id === parseInt(motoristaId));
     if (motorista) {
       setPlacaSelecionada(motorista.placa_caminhao);
+      setMostrarPlaca(true);
+    } else {
+      setMostrarPlaca(false);
     }
   };
 
@@ -160,7 +164,7 @@ export default function Sistema1() {
                   </Select>
                 </div>
 
-                {placaSelecionada && (
+                {mostrarPlaca && (
                   <div className="space-y-2">
                     <Label htmlFor="placa">Placa do Caminhão *</Label>
                     <Input

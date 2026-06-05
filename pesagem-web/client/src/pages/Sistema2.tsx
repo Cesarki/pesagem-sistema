@@ -91,20 +91,39 @@ export default function Sistema2() {
       return;
     }
 
+    const pesagemFinal = parseFloat(formData.pesagem_final);
+
+    // Validações
+    if (isNaN(pesagemFinal) || pesagemFinal < 0) {
+      toast.error('Peso final deve ser um número válido e positivo');
+      return;
+    }
+
+    if (formData.status === 'Pesagem finalizada' && pesagemFinal === 0) {
+      toast.error('Peso final não pode ser zero para pesagem finalizada');
+      return;
+    }
+
     setFinalizandoId(selectedPesagem.id);
 
     try {
       await put(`/pesagens/${selectedPesagem.id}`, {
-        pesagem_final: parseFloat(formData.pesagem_final),
+        pesagem_final: pesagemFinal,
         status: formData.status,
       });
 
-      toast.success('Pesagem finalizada com sucesso!');
+      // Mensagens diferenciadas por status
+      if (formData.status === 'Pesagem finalizada') {
+        toast.success('✅ Pesagem finalizada com sucesso!');
+      } else {
+        toast.success('⏳ Caminhão marcado como descarregando');
+      }
+
       setShowDialog(false);
       setSelectedPesagem(null);
       await loadPesagensAbiertas();
     } catch (err) {
-      toast.error('Erro ao finalizar pesagem');
+      toast.error('Erro ao atualizar pesagem');
     } finally {
       setFinalizandoId(null);
     }
@@ -324,10 +343,19 @@ export default function Sistema2() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Pesagem finalizada">Pesagem Finalizada</SelectItem>
-                      <SelectItem value="Descarregando">Descarregando</SelectItem>
+                      <SelectItem value="Pesagem finalizada">
+                        ✅ Pesagem Finalizada (Saída completa)
+                      </SelectItem>
+                      <SelectItem value="Descarregando">
+                        ⏳ Descarregando (Continua em andamento)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500">
+                    {formData.status === 'Pesagem finalizada'
+                      ? 'Caminhão sairá do sistema após confirmação'
+                      : 'Caminhão continuará pendente para finalização posterior'}
+                  </p>
                 </div>
               </div>
 
@@ -345,16 +373,22 @@ export default function Sistema2() {
                   onClick={handleFinalizarPesagem}
                   disabled={finalizandoId === selectedPesagem.id || !formData.pesagem_final}
                   className="flex-1"
+                  variant={formData.status === 'Pesagem finalizada' ? 'default' : 'secondary'}
                 >
                   {finalizandoId === selectedPesagem.id ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Finalizando...
+                      Salvando...
+                    </>
+                  ) : formData.status === 'Pesagem finalizada' ? (
+                    <>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Finalizar Pesagem
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Finalizar
+                      <AlertCircle className="mr-2 h-4 w-4" />
+                      Marcar como Descarregando
                     </>
                   )}
                 </Button>
