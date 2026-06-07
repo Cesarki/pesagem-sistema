@@ -35,11 +35,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <Truck className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3">
+              <img 
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp" 
+                alt="Classic Metais Reciclados" 
+                className="w-10 h-10"
+              />
+              <div>
+                <h1 className="text-sm font-bold text-gray-900">Classic Metais</h1>
+                <p className="text-xs text-gray-600">Pesagem</p>
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Pesagem</h1>
             </div>
 
             {/* Desktop Navigation */}

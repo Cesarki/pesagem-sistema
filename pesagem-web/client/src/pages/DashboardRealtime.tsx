@@ -146,11 +146,18 @@ export default function DashboardRealtime() {
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </Button>
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Dashboard em Tempo Real</h2>
-            <p className="text-gray-600 mt-1">
-              Monitoramento de pesagens do dia
-            </p>
+          <div className="flex items-center gap-3">
+            <img 
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp" 
+              alt="Classic Metais Reciclados" 
+              className="w-12 h-12"
+            />
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">Dashboard em Tempo Real</h2>
+              <p className="text-gray-600 mt-1">
+                Monitoramento de pesagens do dia
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">

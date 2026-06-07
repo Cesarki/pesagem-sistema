@@ -151,10 +151,19 @@ export default function CadastroMotorista() {
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <h1 className="text-3xl font-bold mb-2">Cadastro de Motoristas</h1>
-          <p className="text-muted-foreground">
-            Gerencie motoristas e suas placas de caminhão
-          </p>
+          <div className="flex items-center gap-3 mb-4">
+            <img 
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp" 
+              alt="Classic Metais Reciclados" 
+              className="w-12 h-12"
+            />
+            <div>
+              <h1 className="text-3xl font-bold mb-1">Cadastro de Motoristas</h1>
+              <p className="text-muted-foreground">
+                Gerencie motoristas e suas placas de caminhão
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Formulário de Cadastro */}

@@ -418,9 +418,16 @@ export default function PesagemDetalhes() {
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </Button>
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Detalhes da Pesagem</h2>
-            <p className="text-gray-600 mt-1">ID: {pesagem.id}</p>
+          <div className="flex items-center gap-3">
+            <img 
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp" 
+              alt="Classic Metais Reciclados" 
+              className="w-12 h-12"
+            />
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">Detalhes da Pesagem</h2>
+              <p className="text-gray-600 mt-1">ID: {pesagem.id}</p>
+            </div>
           </div>
         </div>
         <div className={`px-4 py-2 rounded-lg text-sm font-medium ${getStatusColor(pesagem.status)}`}>

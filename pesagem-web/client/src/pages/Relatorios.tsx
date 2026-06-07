@@ -479,10 +479,19 @@ export default function Relatorios() {
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <h1 className="text-3xl font-bold mb-2">Relatório de Pesagens</h1>
-          <p className="text-muted-foreground">
-            Visualize todas as pesagens realizadas com informações completas
-          </p>
+          <div className="flex items-center gap-3 mb-4">
+            <img 
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp" 
+              alt="Classic Metais Reciclados" 
+              className="w-12 h-12"
+            />
+            <div>
+              <h1 className="text-3xl font-bold mb-1">Relatório de Pesagens</h1>
+              <p className="text-muted-foreground">
+                Visualize todas as pesagens realizadas com informações completas
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Filtros */}

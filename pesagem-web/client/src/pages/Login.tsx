@@ -32,12 +32,14 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="bg-blue-600 p-3 rounded-lg">
-              <Truck className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Pesagem</h1>
+          <div className="flex justify-center mb-6">
+            <img 
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp" 
+              alt="Classic Metais Reciclados" 
+              className="w-24 h-24"
+            />
           </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Classic Metais Reciclados</h1>
           <p className="text-gray-600">Sistema de Pesagem de Caminhões</p>
         </div>
 
