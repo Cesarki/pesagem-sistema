@@ -4,8 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMockApi } from '@/hooks/useMockApi';
-import { AlertCircle, CheckCircle, Loader2, Plus } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/Pagination';
+import { AlertCircle, CheckCircle, Loader2, Plus, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
 
@@ -30,10 +33,13 @@ interface Pesagem {
 
 export default function Sistema1() {
   const { get, post, isLoading } = useMockApi();
+  const [, setLocation] = useLocation();
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [pesagens, setPesagens] = useState<Pesagem[]>([]);
   const [loadingMotoristas, setLoadingMotoristas] = useState(true);
   const [loadingPesagens, setLoadingPesagens] = useState(true);
+
+  const pagination = usePagination(pesagens, 10);
 
   const [formData, setFormData] = useState({
     motorista_id: '',
@@ -267,12 +273,13 @@ export default function Sistema1() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {pesagens.map((pesagem) => {
+                  {pagination.paginatedItems.map((pesagem) => {
                     const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
                     return (
                       <div
                         key={pesagem.id}
-                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition"
+                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition cursor-pointer"
+                        onClick={() => setLocation(`/pesagem/${pesagem.id}`)}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -281,16 +288,19 @@ export default function Sistema1() {
                             </h4>
                             <p className="text-sm text-gray-500">{pesagem.placa_caminhao}</p>
                           </div>
-                          <div
-                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              pesagem.status === 'Pesagem finalizada'
-                                ? 'bg-green-100 text-green-800'
-                                : pesagem.status === 'Descarregando'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-blue-100 text-blue-800'
-                            }`}
-                          >
-                            {pesagem.status}
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                pesagem.status === 'Pesagem finalizada'
+                                  ? 'bg-green-100 text-green-800'
+                                  : pesagem.status === 'Descarregando'
+                                    ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-blue-100 text-blue-800'
+                              }`}
+                            >
+                              {pesagem.status}
+                            </div>
+                            <Eye className="w-4 h-4 text-gray-400" />
                           </div>
                         </div>
 
@@ -316,6 +326,17 @@ export default function Sistema1() {
                     );
                   })}
                 </div>
+              )}
+              {pesagens.length > 0 && (
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems}
+                  itemsPerPage={pagination.itemsPerPage}
+                  onGoToPage={pagination.goToPage}
+                  onNextPage={pagination.nextPage}
+                  onPrevPage={pagination.prevPage}
+                />
               )}
             </CardContent>
           </Card>

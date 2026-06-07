@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import CadastroMotorista from "./pages/CadastroMotorista";
 import Dashboard from "./pages/Dashboard";
 import DashboardRealtime from "./pages/DashboardRealtime";
+import PesagemDetalhes from "./pages/PesagemDetalhes";
 import Login from "./pages/Login";
 import Relatorios from "./pages/Relatorios";
 
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/" component={Login} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/dashboard-realtime" component={() => <ProtectedRoute component={DashboardRealtime} />} />
+      <Route path="/pesagem/:id" component={() => <ProtectedRoute component={PesagemDetalhes} />} />
       <Route path="/relatorios" component={() => <ProtectedRoute component={Relatorios} />} />
       <Route path="/cadastro-motorista" component={() => <ProtectedRoute component={CadastroMotorista} />} />
       <Route path="/404" component={NotFound} />

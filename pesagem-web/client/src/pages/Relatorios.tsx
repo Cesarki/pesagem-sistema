@@ -2,7 +2,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMockApi } from '@/hooks/useMockApi';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/Pagination';
 import { ChevronDown, Download, Search, FileText, X, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
@@ -41,8 +44,13 @@ export default function Relatorios() {
   const [busca, setBusca] = useState('');
   const [codigoTicket, setCodigoTicket] = useState('');
   const [statusSelecionado, setStatusSelecionado] = useState<string>('');
+  const [motoristaId, setMotoristaId] = useState<string>('');
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
   const [expandido, setExpandido] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const pagination = usePagination(filtradas, 10);
 
   useEffect(() => {
     const carregarDados = async () => {
@@ -81,6 +89,21 @@ export default function Relatorios() {
         return false;
       }
 
+      // Filtro por motorista específico
+      if (motoristaId && p.motorista_id !== parseInt(motoristaId)) {
+        return false;
+      }
+
+      // Filtro por data inicial
+      if (dataInicio && p.data_pesagem < dataInicio) {
+        return false;
+      }
+
+      // Filtro por data final
+      if (dataFim && p.data_pesagem > dataFim) {
+        return false;
+      }
+
       // Filtro por busca geral (motorista, placa, documento, data)
       if (termo) {
         const motorista = motoristas.find((m) => m.id === p.motorista_id);
@@ -96,7 +119,8 @@ export default function Relatorios() {
     });
 
     setFiltradas(resultado);
-  }, [busca, codigoTicket, statusSelecionado, pesagens]);
+    pagination.goToPage(1);
+  }, [busca, codigoTicket, statusSelecionado, motoristaId, dataInicio, dataFim, pesagens]);
 
   const calcularDiferenca = (inicial: number, final: number) => {
     return final - inicial;
@@ -106,6 +130,10 @@ export default function Relatorios() {
     setBusca('');
     setCodigoTicket('');
     setStatusSelecionado('');
+    setMotoristaId('');
+    setDataInicio('');
+    setDataFim('');
+    pagination.goToPage(1);
   };
 
   const exportarRelatorio = () => {
@@ -116,22 +144,54 @@ export default function Relatorios() {
       }
 
       // Criar conteúdo HTML para o PDF
+      const logoUrl = 'https://d2xsxph8kpxj0f.cloudfront.net/310519663244773232/Rgzxra4LNMDNT6nWWKya48/classic-metais-logo-D7ppsyc7uAzvR8rNhLmqUX.webp';
+      
       const htmlContent = `
         <!DOCTYPE html>
         <html>
           <head>
             <meta charset="UTF-8">
-            <title>Relatório de Pesagens</title>
+            <title>Relatório de Pesagens - Classic Metais Reciclados</title>
             <style>
               body {
-                font-family: Arial, sans-serif;
-                margin: 20px;
+                font-family: 'Arial', sans-serif;
+                margin: 0;
+                padding: 20px;
                 color: #333;
+                background-color: #fff;
+              }
+              .header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 3px solid #1a5f3f;
+              }
+              .logo {
+                width: 100px;
+                height: 100px;
+              }
+              .company-info {
+                text-align: center;
+                flex: 1;
+              }
+              .company-name {
+                font-size: 24px;
+                font-weight: bold;
+                color: #1a5f3f;
+                margin: 0;
+              }
+              .company-subtitle {
+                font-size: 14px;
+                color: #666;
+                margin: 5px 0 0 0;
               }
               h1 {
                 text-align: center;
                 color: #1f2937;
-                margin-bottom: 30px;
+                margin: 20px 0 30px 0;
+                font-size: 22px;
               }
               .relatorio-info {
                 background-color: #f3f4f6;
@@ -242,15 +302,37 @@ export default function Relatorios() {
                 border-top: 1px solid #e5e7eb;
                 padding-top: 20px;
               }
+              .tempo-decorrido {
+                background-color: #f0f9ff;
+                padding: 8px;
+                border-radius: 4px;
+                margin-top: 10px;
+                font-size: 12px;
+              }
+              .tempo-label {
+                color: #0369a1;
+                font-weight: bold;
+              }
             </style>
           </head>
           <body>
-            <h1>Relatório de Pesagens de Caminhões</h1>
+            <div class="header">
+              <img src="${logoUrl}" alt="Classic Metais Reciclados" class="logo" />
+              <div class="company-info">
+                <p class="company-name">CLASSIC METAIS RECICLADOS</p>
+                <p class="company-subtitle">Sistema de Pesagem de Caminhões</p>
+              </div>
+            </div>
+            
+            <h1>Relatório de Pesagens</h1>
+            
             <div class="relatorio-info">
               <p><strong>Data de Geração:</strong> ${new Date().toLocaleString('pt-BR')}</p>
               <p><strong>Total de Pesagens:</strong> ${filtradas.length}</p>
+              ${dataInicio ? `<p><strong>Período:</strong> ${formatDate(dataInicio)} até ${formatDate(dataFim || new Date().toISOString().split('T')[0])}</p>` : ''}
               ${codigoTicket ? `<p><strong>Filtro - Ticket:</strong> #${codigoTicket}</p>` : ''}
               ${statusSelecionado ? `<p><strong>Filtro - Status:</strong> ${statusSelecionado}</p>` : ''}
+              ${motoristaId ? `<p><strong>Filtro - Motorista:</strong> ${motoristas.find(m => m.id === parseInt(motoristaId))?.nome}</p>` : ''}
               ${busca ? `<p><strong>Filtro - Busca:</strong> ${busca}</p>` : ''}
             </div>
       `;
@@ -306,6 +388,10 @@ export default function Relatorios() {
                   <div class="info-label">Hora Saída</div>
                   <div class="info-value">${pesagem.hora_saida || 'Pendente'}</div>
                 </div>
+              </div>
+              
+              <div class="tempo-decorrido">
+                <span class="tempo-label">Tempo de Permanência:</span> Calculado no sistema
               </div>
             </div>
             
@@ -421,7 +507,7 @@ export default function Relatorios() {
             </div>
 
             {/* Filtros em Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Código do Ticket */}
               <div>
                 <Label htmlFor="codigo">Código do Ticket</Label>
@@ -451,6 +537,48 @@ export default function Relatorios() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Motorista */}
+              <div>
+                <Label htmlFor="motorista">Motorista</Label>
+                <select
+                  id="motorista"
+                  value={motoristaId}
+                  onChange={(e) => setMotoristaId(e.target.value)}
+                  className="w-full mt-2 px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                >
+                  <option value="">Todos os Motoristas</option>
+                  {motoristas.map((m) => (
+                    <option key={m.id} value={m.id.toString()}>
+                      {m.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Data Início */}
+              <div>
+                <Label htmlFor="data-inicio">Data Inicial</Label>
+                <Input
+                  id="data-inicio"
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+
+              {/* Data Fim */}
+              <div>
+                <Label htmlFor="data-fim">Data Final</Label>
+                <Input
+                  id="data-fim"
+                  type="date"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                  className="mt-2"
+                />
               </div>
             </div>
 
@@ -493,7 +621,7 @@ export default function Relatorios() {
               </CardContent>
             </Card>
           ) : (
-            filtradas.map((pesagem) => {
+            pagination.paginatedItems.map((pesagem) => {
               const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
               return (
               <Card key={pesagem.id} className="overflow-hidden">
@@ -602,6 +730,17 @@ export default function Relatorios() {
               </Card>
             );
             })
+          )}
+          {filtradas.length > 0 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              itemsPerPage={pagination.itemsPerPage}
+              onGoToPage={pagination.goToPage}
+              onNextPage={pagination.nextPage}
+              onPrevPage={pagination.prevPage}
+            />
           )}
         </div>
       </div>

@@ -4,8 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMockApi } from '@/hooks/useMockApi';
-import { AlertCircle, CheckCircle, Loader2, Truck, AlertTriangle, Info } from 'lucide-react';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/Pagination';
+import { AlertCircle, CheckCircle, Loader2, Truck, AlertTriangle, Info, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
 
@@ -31,12 +34,15 @@ interface Motorista {
 
 export default function Sistema2() {
   const { get, put, isLoading } = useMockApi();
+  const [, setLocation] = useLocation();
   const [pesagensAbiertas, setPesagensAbiertas] = useState<Pesagem[]>([]);
   const [motoristas, setMotoristas] = useState<Motorista[]>([]);
   const [loadingPesagens, setLoadingPesagens] = useState(true);
   const [selectedPesagem, setSelectedPesagem] = useState<Pesagem | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [finalizandoId, setFinalizandoId] = useState<number | null>(null);
+
+  const pagination = usePagination(pesagensAbiertas, 10);
 
   const [formData, setFormData] = useState({
     pesagem_final: '',
@@ -219,65 +225,81 @@ export default function Sistema2() {
               <p className="text-gray-600 mt-1">Todas as pesagens foram finalizadas</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pesagensAbiertas.map((pesagem) => {
-                const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
-                const isPrimeira = pesagem.status === 'Pesando';
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pagination.paginatedItems.map((pesagem) => {
+                  const motorista = motoristas.find((m) => m.id === pesagem.motorista_id);
+                  const isPrimeira = pesagem.status === 'Pesando';
 
-                return (
-                  <div
-                    key={pesagem.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
-                    onClick={() => handleSelectPesagem(pesagem)}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">
-                          {motorista?.nome || 'Motorista desconhecido'}
-                        </h4>
-                        <p className="text-sm text-gray-500">{pesagem.placa_caminhao}</p>
+                  return (
+                    <div
+                      key={pesagem.id}
+                      className="border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer"
+                      onClick={() => handleSelectPesagem(pesagem)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">
+                            {motorista?.nome || 'Motorista desconhecido'}
+                          </h4>
+                          <p className="text-sm text-gray-500">{pesagem.placa_caminhao}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              pesagem.status === 'Descarregando'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-blue-100 text-blue-800'
+                            }`}
+                          >
+                            {isPrimeira ? '🚚 Aguardando' : pesagem.status}
+                          </div>
+                          <Eye className="w-4 h-4 text-gray-400" />
+                        </div>
                       </div>
-                      <div
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          pesagem.status === 'Descarregando'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}
-                      >
-                        {isPrimeira ? '🚚 Aguardando' : pesagem.status}
+
+                      <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+                        <div>
+                          <p className="text-gray-500">Data</p>
+                          <p className="font-medium text-gray-900">{formatDate(pesagem.data_pesagem)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Entrada</p>
+                          <p className="font-medium text-gray-900">{pesagem.hora_entrada}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Peso Inicial</p>
+                          <p className="font-medium text-gray-900">{pesagem.pesagem_inicial} kg</p>
+                        </div>
+                      </div>
+
+                      {isPrimeira && (
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                          <p className="text-xs text-blue-700">
+                            <span className="font-semibold">Próximo passo:</span> Iniciar descarregamento
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="pt-3 border-t border-gray-100 text-xs text-gray-500">
+                        ID: {pesagem.id} • {new Date(pesagem.criado_em).toLocaleString('pt-BR')}
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-3 text-sm mb-3">
-                      <div>
-                        <p className="text-gray-500">Data</p>
-                        <p className="font-medium text-gray-900">{formatDate(pesagem.data_pesagem)}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Entrada</p>
-                        <p className="font-medium text-gray-900">{pesagem.hora_entrada}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Peso Inicial</p>
-                        <p className="font-medium text-gray-900">{pesagem.pesagem_inicial} kg</p>
-                      </div>
-                    </div>
-
-                    {isPrimeira && (
-                      <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
-                        <p className="text-xs text-blue-700">
-                          <span className="font-semibold">Próximo passo:</span> Iniciar descarregamento
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="pt-3 border-t border-gray-100 text-xs text-gray-500">
-                      ID: {pesagem.id} • {new Date(pesagem.criado_em).toLocaleString('pt-BR')}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+              {pesagensAbiertas.length > 0 && (
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems}
+                  itemsPerPage={pagination.itemsPerPage}
+                  onGoToPage={pagination.goToPage}
+                  onNextPage={pagination.nextPage}
+                  onPrevPage={pagination.prevPage}
+                />
+              )}
+            </>
           )}
         </CardContent>
       </Card>
