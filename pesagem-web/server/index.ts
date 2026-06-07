@@ -1,12 +1,32 @@
 import express from 'express';
 import { query } from './db';
 import path from 'path';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
 app.use(express.json());
 
 // Servir arquivos estáticos da pasta public
 app.use(express.static('dist/public'));
+
+// ============ WEBSOCKET EVENTS ============
+
+io.on('connection', (socket) => {
+  console.log(`✅ Cliente conectado: ${socket.id}`);
+
+  socket.on('disconnect', () => {
+    console.log(`❌ Cliente desconectado: ${socket.id}`);
+  });
+});
 
 // ============ ROTAS DE PESAGENS ============
 
@@ -43,6 +63,57 @@ app.get('/api/pesagens/pendentes', async (req, res) => {
   }
 });
 
+// GET /api/pesagens/stats - Retorna estatísticas para o dashboard
+app.get('/api/pesagens/stats', async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT 
+        COUNT(*) as total_pesagens,
+        SUM(CASE WHEN status = 'Pesando' THEN 1 ELSE 0 END) as pesando,
+        SUM(CASE WHEN status = 'Descarregando' THEN 1 ELSE 0 END) as descarregando,
+        SUM(CASE WHEN status = 'Pesagem finalizada' THEN 1 ELSE 0 END) as finalizadas,
+        ROUND(AVG(EXTRACT(EPOCH FROM (atualizado_em - criado_em)) / 60)::numeric, 2) as tempo_medio_minutos
+       FROM pesagens
+       WHERE data_pesagem = CURRENT_DATE`
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar estatísticas:', err);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// GET /api/pesagens/chart-data - Retorna dados para gráfico de barra (pesagens por hora)
+app.get('/api/pesagens/chart-data', async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT 
+        EXTRACT(HOUR FROM criado_em) as hora,
+        COUNT(*) as total
+       FROM pesagens
+       WHERE data_pesagem = CURRENT_DATE
+       GROUP BY EXTRACT(HOUR FROM criado_em)
+       ORDER BY hora ASC`
+    );
+    
+    // Preencher horas faltantes com 0
+    const chartData = Array.from({ length: 24 }, (_, i) => ({
+      hora: `${i}:00`,
+      total: 0,
+    }));
+    
+    result.rows.forEach((row: any) => {
+      const hora = parseInt(row.hora);
+      chartData[hora].total = parseInt(row.total);
+    });
+    
+    res.json(chartData);
+  } catch (err) {
+    console.error('Erro ao buscar dados do gráfico:', err);
+    res.status(500).json({ error: 'Erro ao buscar dados do gráfico' });
+  }
+});
+
 // POST /api/pesagens - Criar nova pesagem
 app.post('/api/pesagens', async (req, res) => {
   try {
@@ -61,6 +132,16 @@ app.post('/api/pesagens', async (req, res) => {
        RETURNING *`,
       [motorista_id, placa_caminhao, data_pesagem, hora_entrada, pesagem_inicial]
     );
+
+    // Emitir evento WebSocket para atualizar dashboard
+    io.emit('nova_pesagem', {
+      id: result.rows[0].id,
+      motorista_id: result.rows[0].motorista_id,
+      placa_caminhao: result.rows[0].placa_caminhao,
+      pesagem_inicial: result.rows[0].pesagem_inicial,
+      status: result.rows[0].status,
+      criado_em: result.rows[0].criado_em,
+    });
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -92,6 +173,14 @@ app.put('/api/pesagens/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Pesagem não encontrada' });
     }
+
+    // Emitir evento WebSocket para atualizar dashboard
+    io.emit('pesagem_atualizada', {
+      id: result.rows[0].id,
+      status: result.rows[0].status,
+      pesagem_final: result.rows[0].pesagem_final,
+      atualizado_em: result.rows[0].atualizado_em,
+    });
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -186,6 +275,7 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`📡 WebSocket ativo em ws://localhost:${PORT}`);
 });

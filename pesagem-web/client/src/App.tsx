@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import CadastroMotorista from "./pages/CadastroMotorista";
 import Dashboard from "./pages/Dashboard";
+import DashboardRealtime from "./pages/DashboardRealtime";
 import Login from "./pages/Login";
 import Relatorios from "./pages/Relatorios";
 
@@ -25,6 +26,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Login} />
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
+      <Route path="/dashboard-realtime" component={() => <ProtectedRoute component={DashboardRealtime} />} />
       <Route path="/relatorios" component={() => <ProtectedRoute component={Relatorios} />} />
       <Route path="/cadastro-motorista" component={() => <ProtectedRoute component={CadastroMotorista} />} />
       <Route path="/404" component={NotFound} />

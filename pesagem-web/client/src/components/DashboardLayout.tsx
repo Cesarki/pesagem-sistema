@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileText, LogOut, Menu, Truck, Users, X } from 'lucide-react';
+import { FileText, LogOut, Menu, Truck, Users, X, Activity } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 import { useLocation } from 'wouter';
 
@@ -67,6 +67,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
                       Saída
                     </span>
+                  </Button>
+                )}
+                {canAccessSistema1 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setLocation('/dashboard-realtime')}
+                    className="gap-2"
+                  >
+                    <Activity className="w-4 h-4" />
+                    <span>Dashboard</span>
                   </Button>
                 )}
                 <Button
@@ -141,6 +151,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   className="w-full justify-start"
                 >
                   Sistema 2 - Saída
+                </Button>
+              )}
+              {canAccessSistema1 && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setLocation('/dashboard-realtime');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full justify-start"
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  Dashboard em Tempo Real
                 </Button>
               )}
               <Button
